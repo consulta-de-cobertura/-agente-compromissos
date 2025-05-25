@@ -1,10 +1,13 @@
 // ===== DEPENDÊNCIAS =====
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
+const express = require('express');
+const app = express();
+app.use(express.json());
 
 // ===== CONFIGURAÇÕES =====
 const supabaseUrl = 'https://wpxodnqmiiexbfleifsb.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // (sua chave completa)
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweG9kbnFtaWlleGJmbGVpZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjcxNzIsImV4cCI6MjA2Mjg0MzE3Mn0.WZFjOC0DX5xUWzI5k150mDvu02h9RnULAwZzFFOK8OQ';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const zApiUrl = 'https://api.z-api.io/instances/3E10B3ED9B50B0E3F6F5AAEF140028B5/token/4584BFE8D86774FEC9CF4A9D/send-text';
@@ -17,7 +20,7 @@ async function verificarEnviarNotificacoes() {
     const { data, error } = await supabase
         .from('compromissos')
         .select('*')
-        .eq('enviado', false);  // <<< COLUNA CORRIGIDA
+        .eq('enviado', false);
 
     if (error) {
         console.error('Erro ao buscar compromissos:', error);
@@ -60,11 +63,7 @@ async function verificarEnviarNotificacoes() {
 // ===== INTERVALO DE VERIFICAÇÃO =====
 setInterval(verificarEnviarNotificacoes, 60000); // a cada 1 minuto
 
-const express = require('express');
-const app = express();
-app.use(express.json());
-
-// ROTA NOVA → Receber compromisso vindo do ChatGPT
+// ===== ROTA NOVA → Receber compromisso vindo do ChatGPT =====
 app.post('/registrar-compromisso', async (req, res) => {
     const { telefone, mensagem, horario } = req.body;
 
@@ -92,8 +91,10 @@ app.post('/registrar-compromisso', async (req, res) => {
     }
 });
 
-// Ajuste para rodar na porta Railway
+// ===== AJUSTE PARA RODAR NA PORTA RAILWAY =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
 });
+
+
