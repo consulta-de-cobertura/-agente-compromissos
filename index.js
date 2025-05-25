@@ -1,21 +1,22 @@
+require('dotenv').config();
 const express = require('express');
-const app = express();
-app.use(express.json());
-
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 
-// ===== CONFIGURAÇÕES =====
-const supabaseUrl = 'https://wpxodnqmiiexbfleifsb.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweG9kbnFtaWlleGJmbGVpZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjcxNzIsImV4cCI6MjA2Mjg0MzE3Mn0.WZFjOC0DX5xUWzI5k150mDvu02h9RnULAwZzFFOK8OQ';
+const app = express();
+app.use(express.json());
+
+// CONFIGURAÇÕES
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const zApiUrl = 'https://api.z-api.io/instances/3E10B3ED9B50B0E3F6F5AAEF140028B5/token/4584BFE8D86774FEC9CF4A9D/send-text';
-const zApiClientToken = 'F68cd4b1f5bc6438295bb95043c103e39S';
+const zApiUrl = `https://api.z-api.io/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`;
+const zApiClientToken = process.env.ZAPI_CLIENT_TOKEN;
 
-console.log('✅ Agente Compromissos iniciado e monitorando compromissos...');
+console.log('✅ Agente Zap iniciado e monitorando compromissos...');
 
-// ===== FUNÇÃO PRINCIPAL =====
+// FUNÇÃO PRINCIPAL: VERIFICAR E ENVIAR NOTIFICAÇÕES
 async function verificarEnviarNotificacoes() {
     const { data, error } = await supabase
         .from('compromissos')
@@ -23,7 +24,7 @@ async function verificarEnviarNotificacoes() {
         .eq('enviado', false);
 
     if (error) {
-        console.error('Erro ao buscar compromissos:', error);
+        console.error('❌ Erro ao buscar compromissos:', error);
         return;
     }
 
@@ -60,36 +61,10 @@ async function verificarEnviarNotificacoes() {
     }
 }
 
-// ===== INTERVALO DE VERIFICAÇÃO =====
-setInterval(verificarEnviarNotificacoes, 60000); // a cada 1 minuto
+// INTERVALO DE VERIFICAÇÃO A CADA 1 MINUTO
+setInterval(verificarEnviarNotificacoes, 60000);
 
-// ===== ROTA API PARA RECEBER COMPROMISSOS =====
-app.post('/registrar-compromisso', async (req, res) => {
-    const { telefone, mensagem, horario } = req.body;
-
-    if (!telefone || !mensagem || !horario) {
-        return res.status(400).json({ error: 'Telefone, mensagem e horário são obrigatórios.' });
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('compromissos')
-            .insert([{ telefone, mensagem, horario, enviado: false }]);
-
-        if (error) {
-            console.error('Erro ao salvar compromisso:', error);
-            return res.status(500).json({ error: 'Erro ao salvar compromisso.' });
-        }
-
-        console.log(`✅ Novo compromisso salvo: ${mensagem} para ${telefone} em ${horario}`);
-        res.json({ success: true, compromisso: data });
-    } catch (err) {
-        console.error('❌ Erro geral:', err);
-        res.status(500).json({ error: 'Erro interno.' });
-    }
-});
-
-// ===== START SERVER =====
+// SERVIDOR PARA MANTER O RAILWAY VIVO
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
