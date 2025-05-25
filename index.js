@@ -1,9 +1,9 @@
-// ===== DEPENDÊNCIAS =====
-const { createClient } = require('@supabase/supabase-js');
-const axios = require('axios');
 const express = require('express');
 const app = express();
 app.use(express.json());
+
+const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
 
 // ===== CONFIGURAÇÕES =====
 const supabaseUrl = 'https://wpxodnqmiiexbfleifsb.supabase.co';
@@ -63,7 +63,7 @@ async function verificarEnviarNotificacoes() {
 // ===== INTERVALO DE VERIFICAÇÃO =====
 setInterval(verificarEnviarNotificacoes, 60000); // a cada 1 minuto
 
-// ===== ROTA NOVA → Receber compromisso vindo do ChatGPT =====
+// ===== ROTA API PARA RECEBER COMPROMISSOS =====
 app.post('/registrar-compromisso', async (req, res) => {
     const { telefone, mensagem, horario } = req.body;
 
@@ -74,9 +74,7 @@ app.post('/registrar-compromisso', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('compromissos')
-            .insert([
-                { telefone, mensagem, horario, enviado: false }
-            ]);
+            .insert([{ telefone, mensagem, horario, enviado: false }]);
 
         if (error) {
             console.error('Erro ao salvar compromisso:', error);
@@ -91,10 +89,8 @@ app.post('/registrar-compromisso', async (req, res) => {
     }
 });
 
-// ===== AJUSTE PARA RODAR NA PORTA RAILWAY =====
+// ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
 });
-
-

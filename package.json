@@ -1,7 +1,7 @@
 {
   "name": "agente-compromissos",
   "version": "1.0.0",
-  "description": "Projeto Agente Compromissos rodando na Railway",
+  "description": "Projeto Agente Zap rodando com notificações no Railway",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -9,6 +9,8 @@
   "author": "Eliedson",
   "license": "MIT",
   "dependencies": {
-    "express": "^5.1.0"
+    "axios": "^1.6.8",
+    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.39.7"
   }
 }
