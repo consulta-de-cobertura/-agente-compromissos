@@ -60,3 +60,40 @@ async function verificarEnviarNotificacoes() {
 // ===== INTERVALO DE VERIFICAÇÃO =====
 setInterval(verificarEnviarNotificacoes, 60000); // a cada 1 minuto
 
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+// ROTA NOVA → Receber compromisso vindo do ChatGPT
+app.post('/registrar-compromisso', async (req, res) => {
+    const { telefone, mensagem, horario } = req.body;
+
+    if (!telefone || !mensagem || !horario) {
+        return res.status(400).json({ error: 'Telefone, mensagem e horário são obrigatórios.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('compromissos')
+            .insert([
+                { telefone, mensagem, horario, enviado: false }
+            ]);
+
+        if (error) {
+            console.error('Erro ao salvar compromisso:', error);
+            return res.status(500).json({ error: 'Erro ao salvar compromisso.' });
+        }
+
+        console.log(`✅ Novo compromisso salvo: ${mensagem} para ${telefone} em ${horario}`);
+        res.json({ success: true, compromisso: data });
+    } catch (err) {
+        console.error('❌ Erro geral:', err);
+        res.status(500).json({ error: 'Erro interno.' });
+    }
+});
+
+// Ajuste para rodar na porta Railway
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`✅ Servidor rodando na porta ${PORT}`);
+});
