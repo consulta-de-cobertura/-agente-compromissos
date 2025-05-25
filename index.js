@@ -17,7 +17,7 @@ async function verificarEEnviarNotificacoes() {
   const { data, error } = await supabase
     .from('compromissos')
     .select('*')
-    .eq('notificado', false);
+    .eq('enviado', false);
 
   if (error) {
     console.error('Erro ao buscar compromissos:', error);
@@ -31,11 +31,11 @@ async function verificarEEnviarNotificacoes() {
     const diffMinutos = Math.floor((horaCompromisso - agora) / 60000);
 
     if (diffMinutos <= 5 && diffMinutos >= 0) {
-      const mensagem = `🔔 Lembrete: Você tem o compromisso "${compromisso.descricao}" às ${horaCompromisso.toLocaleTimeString()}`;
+      const mensagem = `🔔 Lembrete: ${compromisso.mensagem}`;
 
       try {
         await axios.post(zApiUrl, {
-          phone: compromisso.whatsapp,
+          phone: compromisso.telefone,
           message: mensagem,
         }, {
           headers: {
@@ -46,12 +46,12 @@ async function verificarEEnviarNotificacoes() {
 
         await supabase
           .from('compromissos')
-          .update({ notificado: true })
+          .update({ enviado: true })
           .eq('id', compromisso.id);
 
-        console.log(`✅ Notificação enviada para ${compromisso.whatsapp}`);
+        console.log(`✅ Notificação enviada para ${compromisso.telefone}`);
       } catch (err) {
-        console.error(`❌ Erro ao enviar para ${compromisso.whatsapp}:`, err.message);
+        console.error(`❌ Erro ao enviar para ${compromisso.telefone}:`, err.message);
       }
     }
   }
@@ -59,3 +59,4 @@ async function verificarEEnviarNotificacoes() {
 
 // ===== INTERVALO DE VERIFICAÇÃO =====
 setInterval(verificarEEnviarNotificacoes, 60000);
+
